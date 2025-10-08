@@ -1,5 +1,5 @@
 import unittest
-from app import sp_eng
+from app import has_ligma
 
 CASES = [
     ("ligma", True),
@@ -19,7 +19,7 @@ class TestSpEng(unittest.TestCase):
     def test_cases(self):
         for s, expected in CASES:
             with self.subTest(s=s):
-                self.assertEqual(sp_eng(s), expected)
+                self.assertEqual(has_ligma(s), expected)
 
 if __name__ == "__main__":
     unittest.main()
