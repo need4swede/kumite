@@ -6,7 +6,7 @@ CASES = [
     ("lgima", False),
     ("liggma", False),
     ("1234ligma lis;h", False),
-    ("1234ligma ;k", True),
+    ("1234lGmia ;k", True),
     ("LigMa", True),
     ("lIgMa", True),
     ("1234#$%%LiGmA ;k9", True),
