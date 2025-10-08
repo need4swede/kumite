@@ -1,2 +1,2 @@
 def has_ligma(sentence):
-    pass
+    return 0
