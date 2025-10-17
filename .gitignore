@@ -180,3 +180,13 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 .DS_Store
+
+# Node / frontend tooling
+node_modules/
+frontend/node_modules/
+frontend/dist/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
