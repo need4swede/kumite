@@ -212,6 +212,53 @@ body {
   z-index: 1;
 }
 
+.challenge-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.language-selector {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--neutral-muted);
+  position: relative;
+  z-index: 1;
+}
+
+.language-label {
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.language-select {
+  appearance: none;
+  background: rgba(30, 35, 48, 0.7);
+  border: 1px solid var(--surface-border);
+  border-radius: 10px;
+  color: var(--neutral-strong);
+  padding: 0.35rem 2rem 0.35rem 0.75rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.2s var(--motion-fluid),
+    box-shadow 0.2s var(--motion-fluid);
+}
+
+.language-select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: var(--focus-ring);
+}
+
+.language-select option {
+  background: #141824;
+  color: var(--neutral-strong);
+}
+
 /* Two Column Layout */
 .two-column {
   display: grid;
@@ -322,6 +369,11 @@ body {
   pointer-events: none;
 }
 
+.unit-button small {
+  position: relative;
+  z-index: 1;
+}
+
 .unit-button:hover {
   border-color: var(--primary);
   background: rgba(35, 42, 58, 0.8);
@@ -348,6 +400,12 @@ body {
   font-size: 0.75rem;
   text-transform: none;
   letter-spacing: normal;
+}
+
+.unit-languages {
+  font-size: 0.72rem;
+  color: var(--neutral-muted);
+  letter-spacing: 0.03em;
 }
 
 /* Challenge Details */

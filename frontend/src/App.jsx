@@ -13,7 +13,8 @@ function App() {
   const [challengesError, setChallengesError] = useState("");
   const [isLoadingChallenges, setIsLoadingChallenges] = useState(true);
 
-  const [selected, setSelected] = useState({ language: "", unit: "" });
+  const [selectedUnit, setSelectedUnit] = useState("");
+  const [selectedLanguage, setSelectedLanguage] = useState("");
   const [challenge, setChallenge] = useState(null);
   const [challengeError, setChallengeError] = useState("");
   const [isLoadingChallenge, setIsLoadingChallenge] = useState(false);
@@ -53,45 +54,108 @@ function App() {
     };
   }, []);
 
-  const selectChallenge = useCallback(
-    async (language, unit) => {
-      setSelected({ language, unit });
-      setIsLoadingChallenge(true);
-      setChallenge(null);
-      setChallengeError("");
-      setResult(null);
-      setRunError("");
-      try {
-        const { data } = await apiClient.get(
-          `/challenges/${language}/${unit}`
-        );
-        setChallenge(data);
-        setCode(data.starter_code ?? "");
-      } catch (error) {
-        const message =
-          error?.response?.data?.detail ??
-          "Unable to load the selected challenge.";
-        setChallengeError(message);
-        setCode("");
-      } finally {
-        setIsLoadingChallenge(false);
-      }
-    },
-    []
-  );
+  const unitData = useMemo(() => {
+    const seenUnits = new Set();
+    const orderedUnits = [];
+    const unitsById = new Map();
+
+    challenges.forEach((languageEntry) => {
+      languageEntry.units.forEach((unit) => {
+        if (!seenUnits.has(unit.unit)) {
+          const aggregate = {
+            unit: unit.unit,
+            title: unit.title,
+            languages: [languageEntry.language]
+          };
+          orderedUnits.push(aggregate);
+          seenUnits.add(unit.unit);
+          unitsById.set(unit.unit, aggregate);
+        } else {
+          const existing = unitsById.get(unit.unit);
+          if (!existing.languages.includes(languageEntry.language)) {
+            existing.languages.push(languageEntry.language);
+          }
+        }
+      });
+    });
+
+    return { orderedUnits, unitsById };
+  }, [challenges]);
+
+  const languagesForSelectedUnit = useMemo(() => {
+    return unitData.unitsById.get(selectedUnit)?.languages ?? [];
+  }, [selectedUnit, unitData]);
+
+  const loadChallenge = useCallback(async (language, unit) => {
+    if (!language || !unit) {
+      return;
+    }
+
+    setIsLoadingChallenge(true);
+    setChallenge(null);
+    setChallengeError("");
+    setResult(null);
+    setRunError("");
+
+    try {
+      const { data } = await apiClient.get(`/challenges/${language}/${unit}`);
+      setChallenge(data);
+      setCode(data.starter_code ?? "");
+    } catch (error) {
+      const message =
+        error?.response?.data?.detail ??
+        "Unable to load the selected challenge.";
+      setChallengeError(message);
+      setCode("");
+    } finally {
+      setIsLoadingChallenge(false);
+    }
+  }, []);
 
   useEffect(() => {
-    if (!isLoadingChallenges && challenges.length > 0 && !selected.language) {
-      const fallbackLanguage = challenges[0];
-      if (fallbackLanguage?.units?.length) {
-        const fallbackUnit = fallbackLanguage.units[0];
-        selectChallenge(fallbackLanguage.language, fallbackUnit.unit);
-      }
+    if (isLoadingChallenges || unitData.orderedUnits.length === 0) {
+      return;
     }
-  }, [challenges, isLoadingChallenges, selectChallenge, selected.language]);
+
+    setSelectedUnit((current) => {
+      if (current && unitData.unitsById.has(current)) {
+        return current;
+      }
+      return unitData.orderedUnits[0].unit;
+    });
+  }, [isLoadingChallenges, unitData]);
+
+  useEffect(() => {
+    if (!selectedUnit) {
+      setSelectedLanguage("");
+      return;
+    }
+
+    setSelectedLanguage((current) => {
+      if (current && languagesForSelectedUnit.includes(current)) {
+        return current;
+      }
+      return languagesForSelectedUnit[0] ?? "";
+    });
+  }, [languagesForSelectedUnit, selectedUnit]);
+
+  useEffect(() => {
+    if (!selectedLanguage || !selectedUnit) {
+      return;
+    }
+    if (!languagesForSelectedUnit.includes(selectedLanguage)) {
+      return;
+    }
+    loadChallenge(selectedLanguage, selectedUnit);
+  }, [
+    languagesForSelectedUnit,
+    loadChallenge,
+    selectedLanguage,
+    selectedUnit
+  ]);
 
   const handleRun = useCallback(async () => {
-    if (!selected.language || !selected.unit) {
+    if (!selectedLanguage || !selectedUnit) {
       return;
     }
 
@@ -100,7 +164,7 @@ function App() {
     setRunError("");
     try {
       const { data } = await apiClient.post(
-        `/execute/${selected.language}/${selected.unit}`,
+        `/execute/${selectedLanguage}/${selectedUnit}`,
         { code }
       );
       setResult(data);
@@ -111,7 +175,7 @@ function App() {
     } finally {
       setIsRunning(false);
     }
-  }, [code, selected.language, selected.unit]);
+  }, [code, selectedLanguage, selectedUnit]);
 
   const instructions = useMemo(() => {
     if (challengeError) {
@@ -126,16 +190,42 @@ function App() {
     return challenge.instructions || "No instructions provided.";
   }, [challenge, challengeError, isLoadingChallenge]);
 
+  const handleSelectUnit = useCallback((unit) => {
+    setSelectedUnit(unit);
+  }, []);
+
+  const handleSelectLanguage = useCallback((language) => {
+    setSelectedLanguage(language);
+  }, []);
+
   return (
     <div className="app-shell">
       <ChallengeList
-        challenges={challenges}
-        selected={selected}
-        onSelect={selectChallenge}
+        units={unitData.orderedUnits}
+        selectedUnit={selectedUnit}
+        onSelectUnit={handleSelectUnit}
       />
       <div className="main-panel">
         <section className="panel" style={{ flex: "0 0 auto" }}>
-          <h2>Challenge</h2>
+          <div className="challenge-header">
+            <h2>Challenge</h2>
+            {languagesForSelectedUnit.length > 0 ? (
+              <label className="language-selector">
+                <span className="language-label">Language</span>
+                <select
+                  className="language-select"
+                  value={selectedLanguage}
+                  onChange={(event) => handleSelectLanguage(event.target.value)}
+                >
+                  {languagesForSelectedUnit.map((language) => (
+                    <option key={language} value={language}>
+                      {language}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+          </div>
           {isLoadingChallenges ? (
             <p className="instructions">Loading available challenges…</p>
           ) : challengesError ? (
@@ -147,7 +237,9 @@ function App() {
         <div className="two-column">
           <CodeEditor
             value={code}
-            language={challenge?.language ?? selected.language ?? "plaintext"}
+            language={
+              challenge?.language ?? selectedLanguage ?? "plaintext"
+            }
             onChange={(newCode) => setCode(newCode ?? "")}
             onRun={handleRun}
             isRunning={isRunning}
