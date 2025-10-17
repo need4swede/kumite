@@ -24,7 +24,6 @@ function CodeEditor({
           {challengeTitle ? (
             <>
               <strong>{challengeTitle}</strong>
-              {testFilename ? ` · Tests: ${testFilename}` : null}
             </>
           ) : (
             "Select a challenge to start coding."

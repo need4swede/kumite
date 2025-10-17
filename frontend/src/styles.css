@@ -225,13 +225,60 @@ body {
   margin-top: 1.75rem;
 }
 
-.language-title {
-  margin: 0 0 0.75rem;
-  font-size: 0.875rem;
+.language-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(22, 27, 38, 0.6);
+  backdrop-filter: blur(var(--surface-blur-sm)) saturate(120%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--neutral-strong);
+  font-size: 0.95rem;
   font-weight: 600;
-  color: var(--neutral-muted);
+  padding: 0.75rem 0.9rem;
+  border-radius: 12px;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s var(--motion-fluid);
+  position: relative;
+  margin-bottom: 0.75rem;
+}
+
+.language-button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.1) 0%,
+      transparent 100%);
+  opacity: 0;
+  transition: opacity 0.2s var(--motion-fluid);
+  pointer-events: none;
+}
+
+.language-button:hover {
+  border-color: var(--primary);
+  background: rgba(30, 35, 48, 0.75);
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.22);
+}
+
+.language-button:hover::after,
+.language-button.expanded::after {
+  opacity: 1;
+}
+
+.language-button.expanded {
+  border-color: var(--primary-strong);
+  background: rgba(35, 42, 58, 0.85);
+  color: var(--primary-strong);
+}
+
+.language-caret {
+  font-size: 0.9rem;
+  color: inherit;
 }
 
 .unit-list {
@@ -240,6 +287,7 @@ body {
   margin: 0;
   display: grid;
   gap: 0.5rem;
+  animation: surface-enter 0.4s var(--motion-fluid);
 }
 
 .unit-button {
@@ -256,6 +304,9 @@ body {
   cursor: pointer;
   transition: all 0.2s var(--motion-fluid);
   position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
 }
 
 .unit-button::before {
@@ -290,6 +341,13 @@ body {
   color: var(--primary-strong);
   font-weight: 600;
   box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+.unit-subtitle {
+  color: #9aa5b5;
+  font-size: 0.75rem;
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 /* Challenge Details */

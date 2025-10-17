@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
 
 const matchesSearch = (term, language, unit) => {
@@ -12,6 +12,7 @@ const matchesSearch = (term, language, unit) => {
 
 function ChallengeList({ challenges, selected, onSelect }) {
   const [search, setSearch] = useState("");
+  const [expandedLanguage, setExpandedLanguage] = useState("");
 
   const filtered = useMemo(() => {
     if (!search) {
@@ -27,6 +28,26 @@ function ChallengeList({ challenges, selected, onSelect }) {
       })
       .filter((language) => language.units.length > 0);
   }, [challenges, search]);
+
+  useEffect(() => {
+    if (selected.language) {
+      setExpandedLanguage(selected.language);
+    }
+  }, [selected.language]);
+
+  const handleToggleLanguage = (language) => {
+    setExpandedLanguage((current) =>
+      current === language ? "" : language
+    );
+  };
+
+  const shouldShowUnits = (language) => {
+    if (expandedLanguage === language.language) {
+      return true;
+    }
+
+    return Boolean(search && language.units.length > 0);
+  };
 
   return (
     <aside className="sidebar">
@@ -45,26 +66,41 @@ function ChallengeList({ challenges, selected, onSelect }) {
       ) : (
         filtered.map((language) => (
           <section className="list-section" key={language.language}>
-            <h3 className="language-title">{language.language}</h3>
-            <ul className="unit-list">
-              {language.units.map((unit) => {
-                const isActive =
-                  selected.language === language.language &&
-                  selected.unit === unit.unit;
-                return (
-                  <li key={`${language.language}-${unit.unit}`}>
-                    <button
-                      className={`unit-button${isActive ? " active" : ""}`}
-                      type="button"
-                      onClick={() => onSelect(language.language, unit.unit)}
-                    >
-                      <div>{unit.title}</div>
-                      <small style={{ color: "#64748b" }}>{unit.unit}</small>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
+            <button
+              type="button"
+              className={`language-button${
+                expandedLanguage === language.language ? " expanded" : ""
+              }`}
+              onClick={() => handleToggleLanguage(language.language)}
+            >
+              <span>{language.language}</span>
+              <span aria-hidden="true" className="language-caret">
+                {expandedLanguage === language.language ? "▾" : "▸"}
+              </span>
+            </button>
+            {shouldShowUnits(language) ? (
+              <ul className="unit-list">
+                {language.units.map((unit) => {
+                  const isActive =
+                    selected.language === language.language &&
+                    selected.unit === unit.unit;
+                  return (
+                    <li key={`${language.language}-${unit.unit}`}>
+                      <button
+                        className={`unit-button${isActive ? " active" : ""}`}
+                        type="button"
+                        onClick={() => onSelect(language.language, unit.unit)}
+                      >
+                        <div>{unit.unit}</div>
+                        {unit.title ? (
+                          <small className="unit-subtitle">{unit.title}</small>
+                        ) : null}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : null}
           </section>
         ))
       )}

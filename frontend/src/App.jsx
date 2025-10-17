@@ -141,10 +141,7 @@ function App() {
           ) : challengesError ? (
             <p className="instructions">{challengesError}</p>
           ) : (
-            <div className="challenge-details">
-              {challenge ? <h3>{challenge.title}</h3> : null}
-              <div className="instructions">{instructions}</div>
-            </div>
+            <div className="instructions">{instructions}</div>
           )}
         </section>
         <div className="two-column">
