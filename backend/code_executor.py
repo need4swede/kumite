@@ -56,6 +56,10 @@ class CodeExecutor:
         metadata = self._loader.get_challenge(language, unit)
         if language == "python":
             return self._execute_python(metadata, code, timeout_seconds=timeout_seconds)
+        if language == "javascript":
+            return self._execute_javascript(
+                metadata, code, timeout_seconds=timeout_seconds
+            )
         raise ExecutionError(f"No executor implemented for language '{language}'")
 
     def _execute_python(
@@ -127,6 +131,71 @@ class CodeExecutor:
                 shutil.copytree(entry, target)
             else:
                 shutil.copy2(entry, target)
+
+    def _execute_javascript(
+        self,
+        metadata: ChallengeMetadata,
+        code: str,
+        *,
+        timeout_seconds: int,
+    ) -> ExecutionResult:
+        node_path = shutil.which("node")
+        if node_path is None:
+            raise ExecutionError(
+                "Node.js runtime is required for JavaScript challenges"
+            )
+
+        runner_path = Path(__file__).resolve().parent / "javascript_runner.js"
+        if not runner_path.exists():
+            raise ExecutionError("JavaScript test runner is missing")
+
+        unit_dir = metadata.solution_path.parent
+        with tempfile.TemporaryDirectory(prefix="kumite-javascript-") as temp_dir:
+            temp_path = Path(temp_dir)
+            self._copy_challenge_files(unit_dir, temp_path)
+            target_solution = temp_path / metadata.solution_path.name
+            target_solution.write_text(code, encoding="utf-8")
+
+            app_module = temp_path / "app.js"
+            app_module.write_text(code, encoding="utf-8")
+
+            command = [
+                node_path,
+                str(runner_path),
+                metadata.test_path.name,
+            ]
+
+            start = time.perf_counter()
+            try:
+                completed = subprocess.run(
+                    command,
+                    cwd=temp_path,
+                    capture_output=True,
+                    text=True,
+                    timeout=timeout_seconds,
+                )
+            except subprocess.TimeoutExpired as exc:
+                duration = time.perf_counter() - start
+                stdout = exc.stdout or ""
+                stderr = exc.stderr or ""
+                stderr += "\nExecution timed out."
+                return ExecutionResult(
+                    status="timeout",
+                    exit_code=-1,
+                    stdout=stdout,
+                    stderr=stderr.strip(),
+                    duration=duration,
+                )
+
+            duration = time.perf_counter() - start
+            status = "passed" if completed.returncode == 0 else "failed"
+            return ExecutionResult(
+                status=status,
+                exit_code=completed.returncode,
+                stdout=completed.stdout,
+                stderr=completed.stderr,
+                duration=duration,
+            )
 
 
 executor = CodeExecutor()

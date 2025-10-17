@@ -46,9 +46,6 @@ function ChallengeList({ units, selectedUnit, onSelectUnit }) {
                   onClick={() => onSelectUnit(unit.unit)}
                 >
                   <div>{unit.unit}</div>
-                  {unit.title ? (
-                    <small className="unit-subtitle">{unit.title}</small>
-                  ) : null}
                   {unit.languages.length > 0 ? (
                     <small className="unit-languages">
                       {unit.languages.join(" • ")}

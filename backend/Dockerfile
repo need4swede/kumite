@@ -14,6 +14,10 @@ RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
 FROM base AS runtime
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends nodejs npm \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY --from=deps /install /usr/local
 COPY backend ./backend
 COPY challenges ./challenges
