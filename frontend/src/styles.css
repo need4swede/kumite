@@ -118,6 +118,7 @@ body {
       var(--surface-border) 0%,
       var(--surface-highlight) 50%,
       var(--surface-border) 100%) 1;
+  border: none;
   box-shadow: var(--surface-shadow);
   position: relative;
   animation: surface-enter 0.6s var(--motion-fluid) 0.1s both;

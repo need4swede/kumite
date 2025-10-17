@@ -72,6 +72,13 @@ class CodeExecutor:
             target_solution = temp_path / metadata.solution_path.name
             target_solution.write_text(code, encoding="utf-8")
 
+            # Codewars-style Python challenges expect user code to live in `app.py`.
+            # Ensure that the submitted solution is also available under that name
+            # so tests importing `app` resolve to the student's code regardless of
+            # the starter filename stored on disk.
+            app_module = temp_path / "app.py"
+            app_module.write_text(code, encoding="utf-8")
+
             command = [
                 sys.executable,
                 "-m",
