@@ -95,20 +95,20 @@ challenges/
     - Error highlighting
 
 ### Phase 4: Dockerization
-13. **Create Dockerfile for backend**
+13. [x] **Create Dockerfile for backend**
     - Python base image
     - Install dependencies
     - Copy backend code
     - Expose FastAPI port
     - Multi-stage build for optimization
 
-14. **Create Dockerfile for frontend**
+14. [x] **Create Dockerfile for frontend**
     - Node base image for build
     - Build React app
     - Nginx for serving static files
     - Multi-stage build
 
-15. **Create docker-compose.yml**
+15. [x] **Create docker-compose.yml**
     - Backend service configuration
     - Frontend service configuration
     - Volume mounts for challenges directory
