@@ -23,6 +23,9 @@ function App() {
   const [result, setResult] = useState(null);
   const [runError, setRunError] = useState("");
   const [isRunning, setIsRunning] = useState(false);
+  const [explanation, setExplanation] = useState("");
+  const [explainError, setExplainError] = useState("");
+  const [isExplaining, setIsExplaining] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -96,6 +99,8 @@ function App() {
     setChallengeError("");
     setResult(null);
     setRunError("");
+    setExplanation("");
+    setExplainError("");
 
     try {
       const { data } = await apiClient.get(`/challenges/${language}/${unit}`);
@@ -162,6 +167,8 @@ function App() {
     setIsRunning(true);
     setResult(null);
     setRunError("");
+    setExplanation("");
+    setExplainError("");
     try {
       const { data } = await apiClient.post(
         `/execute/${selectedLanguage}/${selectedUnit}`,
@@ -176,6 +183,38 @@ function App() {
       setIsRunning(false);
     }
   }, [code, selectedLanguage, selectedUnit]);
+
+  const handleExplainFailure = useCallback(async () => {
+    if (!result || result.status === "passed") {
+      return;
+    }
+    if (!selectedLanguage || !selectedUnit) {
+      return;
+    }
+
+    setIsExplaining(true);
+    setExplainError("");
+    try {
+      const { data } = await apiClient.post("/ai/explain-failure", {
+        language: selectedLanguage,
+        unit: selectedUnit,
+        code,
+        stdout: result.stdout,
+        stderr: result.stderr,
+        status: result.status,
+        exit_code: result.exit_code
+      });
+      setExplanation(data?.explanation ?? "");
+    } catch (error) {
+      const message =
+        error?.response?.data?.detail ??
+        "Unable to generate an explanation for this failure.";
+      setExplainError(message);
+      setExplanation("");
+    } finally {
+      setIsExplaining(false);
+    }
+  }, [code, result, selectedLanguage, selectedUnit]);
 
   const instructions = useMemo(() => {
     if (challengeError) {
@@ -246,7 +285,15 @@ function App() {
             challengeTitle={challenge?.title}
             testFilename={challenge?.test_filename}
           />
-          <TestResults result={result} error={runError} isRunning={isRunning} />
+          <TestResults
+            result={result}
+            error={runError}
+            isRunning={isRunning}
+            explanation={explanation}
+            explainError={explainError}
+            isExplaining={isExplaining}
+            onExplain={handleExplainFailure}
+          />
         </div>
       </div>
     </div>

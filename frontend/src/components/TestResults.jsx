@@ -20,7 +20,15 @@ StatusIndicator.defaultProps = {
   status: ""
 };
 
-function TestResults({ result, error, isRunning }) {
+function TestResults({
+  result,
+  error,
+  isRunning,
+  onExplain,
+  isExplaining,
+  explanation,
+  explainError
+}) {
   if (isRunning) {
     return (
       <section className="panel">
@@ -52,6 +60,7 @@ function TestResults({ result, error, isRunning }) {
   }
 
   const { status, exit_code: exitCode, stdout, stderr, duration } = result;
+  const canExplain = typeof onExplain === "function";
 
   return (
     <section className="panel">
@@ -75,6 +84,34 @@ function TestResults({ result, error, isRunning }) {
           </div>
         ) : null}
         {!stdout && !stderr ? <div>No output.</div> : null}
+        {status !== "passed" && canExplain ? (
+          <div className="ai-explainer">
+            <div className="ai-explainer-header">
+              <button
+                className="button button-secondary"
+                type="button"
+                onClick={onExplain}
+                disabled={isExplaining}
+              >
+                {isExplaining ? "Explaining…" : "Explain Error"}
+              </button>
+              {isExplaining ? (
+                <span className="ai-explainer-status">
+                  Asking the assistant…
+                </span>
+              ) : null}
+            </div>
+            {explainError ? (
+              <div className="ai-explainer-error">{explainError}</div>
+            ) : null}
+            {explanation ? (
+              <div className="ai-explainer-content">
+                <strong>AI Explanation</strong>
+                <div className="ai-explainer-text">{explanation}</div>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </section>
   );
@@ -89,13 +126,21 @@ TestResults.propTypes = {
     duration: PropTypes.number.isRequired
   }),
   error: PropTypes.string,
-  isRunning: PropTypes.bool
+  isRunning: PropTypes.bool,
+  onExplain: PropTypes.func,
+  isExplaining: PropTypes.bool,
+  explanation: PropTypes.string,
+  explainError: PropTypes.string
 };
 
 TestResults.defaultProps = {
   result: null,
   error: "",
-  isRunning: false
+  isRunning: false,
+  onExplain: undefined,
+  isExplaining: false,
+  explanation: "",
+  explainError: ""
 };
 
 export default TestResults;

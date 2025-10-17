@@ -7,6 +7,10 @@ services:
       - "8012:80"
     environment:
       APP_ENV: production
+      OLLAMA_API_URL: ${OLLAMA_API_URL:-http://localhost:11434}
+      OLLAMA_API_KEY: ${OLLAMA_API_KEY:-}
+      OLLAMA_API_MODEL: ${OLLAMA_API_MODEL:-llama3.1}
+      OLLAMA_API_FAIL_PROMPT: ${OLLAMA_API_FAIL_PROMPT:-}
     healthcheck:
       test: ["CMD-SHELL", "curl --fail http://localhost/api/health || exit 1"]
       interval: 30s
