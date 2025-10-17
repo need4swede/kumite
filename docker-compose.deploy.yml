@@ -1,0 +1,15 @@
+services:
+  kumite:
+    image: need4swede/kumite:latest
+    container_name: kumite
+    restart: unless-stopped
+    ports:
+      - "8012:80"
+    environment:
+      APP_ENV: production
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
