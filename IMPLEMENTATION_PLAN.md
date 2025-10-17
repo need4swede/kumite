@@ -28,39 +28,39 @@ challenges/
 ## Implementation Phases
 
 ### Phase 1: Restructure Existing Code
-1. **Reorganize existing Python units into new structure**
+- [x] **Reorganize existing Python units into new structure**
    - Move `python/unit-XXX/` to `challenges/python/unit-XXX/`
 
-2. **Rename files to standardized convention**
+- [x] **Rename files to standardized convention**
    - Rename `app.py` → `solution.py`
    - Rename `run.py` → `test.py`
    - Apply to all existing units
 
-3. **Create README.md files for each unit**
+- [x] **Create README.md files for each unit**
    - Extract challenge descriptions/instructions
    - Format as markdown
 
 ### Phase 2: Backend Development
-4. **Set up backend directory structure**
+- [x] **Set up backend directory structure**
    - Create `backend/` directory
    - Create `requirements.txt` with dependencies:
      - FastAPI
      - uvicorn
      - pytest (for Python execution)
 
-5. **Implement FastAPI main.py with API endpoints**
+- [x] **Implement FastAPI main.py with API endpoints**
    - `GET /challenges` - List all challenges by language
    - `GET /challenges/{lang}/{unit}` - Get specific challenge details
    - `POST /execute/{lang}/{unit}` - Run user code against tests
    - CORS configuration for frontend
 
-6. **Implement challenge_loader.py for auto-discovery**
+- [x] **Implement challenge_loader.py for auto-discovery**
    - Scan `challenges/` directory
    - Detect language folders
    - Load challenge metadata (README.md, starter code)
    - Cache challenge information
 
-7. **Implement code_executor.py for running tests**
+- [x] **Implement code_executor.py for running tests**
    - Language-agnostic interface
    - Python executor implementation (pytest)
    - Capture stdout, stderr, test results
