@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import PropTypes from "prop-types";
 
 const matchesSearch = (term, unit) => {
@@ -10,8 +10,10 @@ const matchesSearch = (term, unit) => {
   return haystack.includes(term.toLowerCase());
 };
 
-function ChallengeList({ units, selectedUnit, onSelectUnit }) {
+function ChallengeList({ units, selectedUnit, onSelectUnit, isCollapsed, onCollapsedChange }) {
   const [search, setSearch] = useState("");
+  const sidebarRef = useRef(null);
+  const debounceTimerRef = useRef(null);
 
   const filtered = useMemo(() => {
     if (!search) {
@@ -20,8 +22,50 @@ function ChallengeList({ units, selectedUnit, onSelectUnit }) {
     return units.filter((unit) => matchesSearch(search, unit));
   }, [search, units]);
 
+  // Handle mouse enter with debounce
+  const handleMouseEnter = () => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      onCollapsedChange(false);
+    }, 140);
+  };
+
+  // Handle mouse leave with focus intelligence
+  const handleMouseLeave = (event) => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // Check if we're moving to a child element
+    const relatedTarget = event.relatedTarget;
+    if (sidebarRef.current && sidebarRef.current.contains(relatedTarget)) {
+      return; // Don't collapse if moving to child element
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      onCollapsedChange(true);
+    }, 140);
+  };
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
   return (
-    <aside className="sidebar">
+    <aside
+      ref={sidebarRef}
+      className="sidebar"
+      data-collapsed={isCollapsed}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <div className="toolbar">
         <input
           className="search-input"
@@ -70,7 +114,9 @@ ChallengeList.propTypes = {
     })
   ).isRequired,
   selectedUnit: PropTypes.string,
-  onSelectUnit: PropTypes.func.isRequired
+  onSelectUnit: PropTypes.func.isRequired,
+  isCollapsed: PropTypes.bool.isRequired,
+  onCollapsedChange: PropTypes.func.isRequired
 };
 
 ChallengeList.defaultProps = {

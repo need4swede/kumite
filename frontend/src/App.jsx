@@ -3,6 +3,7 @@ import axios from "axios";
 import ChallengeList from "./components/ChallengeList.jsx";
 import CodeEditor from "./components/CodeEditor.jsx";
 import TestResults from "./components/TestResults.jsx";
+import EdgeSensor from "./components/EdgeSensor.jsx";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
@@ -26,6 +27,8 @@ function App() {
   const [explanation, setExplanation] = useState("");
   const [explainError, setExplainError] = useState("");
   const [isExplaining, setIsExplaining] = useState(false);
+
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
@@ -239,12 +242,18 @@ function App() {
 
   return (
     <div className="app-shell">
+      <EdgeSensor
+        onReveal={() => setIsSidebarCollapsed(false)}
+        isSidebarCollapsed={isSidebarCollapsed}
+      />
       <ChallengeList
         units={unitData.orderedUnits}
         selectedUnit={selectedUnit}
         onSelectUnit={handleSelectUnit}
+        isCollapsed={isSidebarCollapsed}
+        onCollapsedChange={setIsSidebarCollapsed}
       />
-      <div className="main-panel">
+      <div className="main-panel" data-sidebar-collapsed={isSidebarCollapsed}>
         <section className="panel" style={{ flex: "0 0 auto" }}>
           <div className="challenge-header">
             <h2>Challenge</h2>
