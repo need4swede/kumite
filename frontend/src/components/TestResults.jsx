@@ -188,13 +188,13 @@ function TestResults({
         {body}
       </section>
       {explanation &&
-      explanationSections &&
-      isExplanationVisible &&
-      result ? (
+        explanationSections &&
+        isExplanationVisible &&
+        result ? (
         <div className="ai-explanation-modal">
           <div className="ai-explanation-content">
             <div className="ai-explanation-header">
-              <h3>AI Explanation</h3>
+              <h3>Error Explanation</h3>
               <button
                 className="ai-explanation-close"
                 type="button"
@@ -248,9 +248,9 @@ TestResults.defaultProps = {
   explanation: "",
   explainError: "",
   isExplanationVisible: true,
-  onExplanationClose: () => {},
+  onExplanationClose: () => { },
   isCollapsed: false,
-  onCollapsedChange: () => {},
+  onCollapsedChange: () => { },
   onExplain: null,
   showExplainButton: false,
   isExplaining: false
