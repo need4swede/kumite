@@ -32,7 +32,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR ${APP_HOME}
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends nginx supervisor curl \
+    && apt-get install -y --no-install-recommends nginx supervisor curl nodejs npm \
     && rm -rf /var/lib/apt/lists/* \
     && rm -f /etc/nginx/conf.d/default.conf /etc/nginx/sites-enabled/default \
     && mkdir -p /run/nginx
