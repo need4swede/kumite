@@ -32,6 +32,7 @@ function App() {
   const [isExplanationVisible, setIsExplanationVisible] = useState(true);
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
+  const [isResultsCollapsed, setIsResultsCollapsed] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
@@ -254,6 +255,12 @@ function App() {
     }
   }, [lastResultId, result]);
 
+  useEffect(() => {
+    if (isRunning || runError || result) {
+      setIsResultsCollapsed(false);
+    }
+  }, [isRunning, runError, result]);
+
   const instructions = useMemo(() => {
     if (challengeError) {
       return challengeError;
@@ -279,7 +286,8 @@ function App() {
     <div className="app-shell">
       <EdgeSensor
         onReveal={() => setIsSidebarCollapsed(false)}
-        isSidebarCollapsed={isSidebarCollapsed}
+        isCollapsed={isSidebarCollapsed}
+        position="left"
       />
       <ChallengeList
         units={unitData.orderedUnits}
@@ -317,7 +325,10 @@ function App() {
             <div className="instructions">{instructions}</div>
           )}
         </section>
-        <div className="two-column">
+        <div
+          className="two-column"
+          data-results-collapsed={isResultsCollapsed}
+        >
           <CodeEditor
             value={code}
             language={
@@ -328,9 +339,6 @@ function App() {
             isRunning={isRunning}
             challengeTitle={challenge?.title}
             testFilename={challenge?.test_filename}
-            onExplain={handleExplainButtonClick}
-            showExplainButton={shouldShowExplain}
-            isExplaining={isExplaining}
           />
           <TestResults
             result={result}
@@ -340,9 +348,19 @@ function App() {
             explainError={explainError}
             isExplanationVisible={isExplanationVisible}
             onExplanationClose={() => setIsExplanationVisible(false)}
+            isCollapsed={isResultsCollapsed}
+            onCollapsedChange={setIsResultsCollapsed}
+            onExplain={handleExplainButtonClick}
+            showExplainButton={shouldShowExplain}
+            isExplaining={isExplaining}
           />
         </div>
       </div>
+      <EdgeSensor
+        onReveal={() => setIsResultsCollapsed(false)}
+        isCollapsed={isResultsCollapsed}
+        position="right"
+      />
     </div>
   );
 }

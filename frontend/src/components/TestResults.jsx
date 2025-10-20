@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 
 function StatusIndicator({ status }) {
@@ -71,74 +72,125 @@ function TestResults({
   explanation,
   explainError,
   isExplanationVisible,
-  onExplanationClose
+  onExplanationClose,
+  isCollapsed,
+  onCollapsedChange,
+  onExplain,
+  showExplainButton,
+  isExplaining
 }) {
+  const panelRef = useRef(null);
+  const debounceTimerRef = useRef(null);
+  const canExplain = showExplainButton && typeof onExplain === "function";
+
+  const handleMouseEnter = () => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      onCollapsedChange(false);
+    }, 140);
+  };
+
+  const handleMouseLeave = (event) => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    const relatedTarget = event.relatedTarget;
+    if (panelRef.current && panelRef.current.contains(relatedTarget)) {
+      return;
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      onCollapsedChange(true);
+    }, 140);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
+  let body;
+  let explanationSections = null;
+
   if (isRunning) {
-    return (
-      <section className="panel">
-        <h2>Test Results</h2>
-        <div className="results">Executing tests...</div>
-      </section>
+    body = <div className="results">Executing tests...</div>;
+  } else if (error) {
+    body = (
+      <div className="results error">
+        <StatusIndicator status="error" />
+        {error}
+      </div>
     );
-  }
-
-  if (error) {
-    return (
-      <section className="panel">
-        <h2>Test Results</h2>
-        <div className="results error">
-          <StatusIndicator status="error" />
-          {error}
+  } else if (!result) {
+    body = <div className="results">Run the tests to view results.</div>;
+  } else {
+    const { status, exit_code: exitCode, stdout, stderr, duration } = result;
+    explanationSections = parseExplanationSections(explanation);
+    body = (
+      <div className={`results ${status === "passed" ? "success" : "error"}`}>
+        <StatusIndicator status={status} />
+        <div style={{ marginBottom: "0.75rem" }}>
+          <div>Exit code: {exitCode}</div>
+          <div>Duration: {duration.toFixed(2)}s</div>
         </div>
-      </section>
+        {stdout ? (
+          <div style={{ marginBottom: "1rem" }}>
+            <strong>stdout</strong>
+            <pre>{stdout}</pre>
+          </div>
+        ) : null}
+        {stderr ? (
+          <div>
+            <strong>stderr</strong>
+            <pre>{stderr}</pre>
+          </div>
+        ) : null}
+        {!stdout && !stderr ? <div>No output.</div> : null}
+        {explainError ? (
+          <div className="ai-explainer">
+            <div className="ai-explainer-error">{explainError}</div>
+          </div>
+        ) : null}
+      </div>
     );
   }
-
-  if (!result) {
-    return (
-      <section className="panel">
-        <h2>Test Results</h2>
-        <div className="results">Run the tests to view results.</div>
-      </section>
-    );
-  }
-
-  const { status, exit_code: exitCode, stdout, stderr, duration } = result;
-  const explanationSections = parseExplanationSections(explanation);
 
   return (
     <>
-      <section className="panel">
+      <section
+        ref={panelRef}
+        className="panel test-results-panel"
+        data-collapsed={isCollapsed}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
         <div className="panel-header">
           <h2>Test Results</h2>
         </div>
-        <div className={`results ${status === "passed" ? "success" : "error"}`}>
-          <StatusIndicator status={status} />
-          <div style={{ marginBottom: "0.75rem" }}>
-            <div>Exit code: {exitCode}</div>
-            <div>Duration: {duration.toFixed(2)}s</div>
+        {canExplain ? (
+          <div className="test-results-actions">
+            <button
+              className={`explain-button ${isExplaining ? "loading" : ""}`}
+              type="button"
+              onClick={onExplain}
+              disabled={isExplaining}
+            >
+              {isExplaining ? "Explaining…" : "Explain Error"}
+            </button>
           </div>
-          {stdout ? (
-            <div style={{ marginBottom: "1rem" }}>
-              <strong>stdout</strong>
-              <pre>{stdout}</pre>
-            </div>
-          ) : null}
-          {stderr ? (
-            <div>
-              <strong>stderr</strong>
-              <pre>{stderr}</pre>
-            </div>
-          ) : null}
-          {!stdout && !stderr ? <div>No output.</div> : null}
-          {explainError ? (
-            <div className="ai-explainer">
-              <div className="ai-explainer-error">{explainError}</div>
-            </div>
-          ) : null}
-        </div>
+        ) : null}
+        {body}
       </section>
-      {explanation && explanationSections && isExplanationVisible ? (
+      {explanation &&
+      explanationSections &&
+      isExplanationVisible &&
+      result ? (
         <div className="ai-explanation-modal">
           <div className="ai-explanation-content">
             <div className="ai-explanation-header">
@@ -181,7 +233,12 @@ TestResults.propTypes = {
   explanation: PropTypes.string,
   explainError: PropTypes.string,
   isExplanationVisible: PropTypes.bool,
-  onExplanationClose: PropTypes.func
+  onExplanationClose: PropTypes.func,
+  isCollapsed: PropTypes.bool,
+  onCollapsedChange: PropTypes.func,
+  onExplain: PropTypes.func,
+  showExplainButton: PropTypes.bool,
+  isExplaining: PropTypes.bool
 };
 
 TestResults.defaultProps = {
@@ -191,7 +248,12 @@ TestResults.defaultProps = {
   explanation: "",
   explainError: "",
   isExplanationVisible: true,
-  onExplanationClose: () => {}
+  onExplanationClose: () => {},
+  isCollapsed: false,
+  onCollapsedChange: () => {},
+  onExplain: null,
+  showExplainButton: false,
+  isExplaining: false
 };
 
 export default TestResults;
