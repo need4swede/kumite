@@ -13,9 +13,13 @@ function CodeEditor({
   onRun,
   isRunning,
   challengeTitle,
-  testFilename
+  testFilename,
+  onExplain,
+  showExplainButton,
+  isExplaining
 }) {
   const monacoLanguage = languageMapping[language] ?? "plaintext";
+  const canExplain = typeof onExplain === "function";
 
   return (
     <section className="panel">
@@ -29,14 +33,26 @@ function CodeEditor({
             "Select a challenge to start coding."
           )}
         </div>
-        <button
-          className="button"
-          type="button"
-          onClick={onRun}
-          disabled={!challengeTitle || isRunning}
-        >
-          {isRunning ? "Running..." : "Run Tests"}
-        </button>
+        <div className="toolbar-actions">
+          {canExplain && showExplainButton ? (
+            <button
+              className={`explain-button ${isExplaining ? "loading" : ""}`}
+              type="button"
+              onClick={onExplain}
+              disabled={isExplaining}
+            >
+              {isExplaining ? "Explaining…" : "Explain Error"}
+            </button>
+          ) : null}
+          <button
+            className="button"
+            type="button"
+            onClick={onRun}
+            disabled={!challengeTitle || isRunning}
+          >
+            {isRunning ? "Running..." : "Run Tests"}
+          </button>
+        </div>
       </div>
       <div style={{ height: "50vh", minHeight: "24rem" }}>
         <Editor
@@ -66,13 +82,19 @@ CodeEditor.propTypes = {
   onRun: PropTypes.func.isRequired,
   isRunning: PropTypes.bool,
   challengeTitle: PropTypes.string,
-  testFilename: PropTypes.string
+  testFilename: PropTypes.string,
+  onExplain: PropTypes.func,
+  showExplainButton: PropTypes.bool,
+  isExplaining: PropTypes.bool
 };
 
 CodeEditor.defaultProps = {
   isRunning: false,
   challengeTitle: "",
-  testFilename: ""
+  testFilename: "",
+  onExplain: null,
+  showExplainButton: false,
+  isExplaining: false
 };
 
 export default CodeEditor;

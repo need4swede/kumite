@@ -27,6 +27,9 @@ function App() {
   const [explanation, setExplanation] = useState("");
   const [explainError, setExplainError] = useState("");
   const [isExplaining, setIsExplaining] = useState(false);
+  const [shouldShowExplain, setShouldShowExplain] = useState(false);
+  const [lastResultId, setLastResultId] = useState(null);
+  const [isExplanationVisible, setIsExplanationVisible] = useState(true);
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
 
@@ -104,6 +107,9 @@ function App() {
     setRunError("");
     setExplanation("");
     setExplainError("");
+    setShouldShowExplain(false);
+    setLastResultId(null);
+    setIsExplanationVisible(true);
 
     try {
       const { data } = await apiClient.get(`/challenges/${language}/${unit}`);
@@ -167,6 +173,9 @@ function App() {
       return;
     }
 
+    setShouldShowExplain(false);
+    setLastResultId(null);
+    setIsExplanationVisible(true);
     setIsRunning(true);
     setResult(null);
     setRunError("");
@@ -218,6 +227,32 @@ function App() {
       setIsExplaining(false);
     }
   }, [code, result, selectedLanguage, selectedUnit]);
+
+  const handleExplainButtonClick = useCallback(() => {
+    if (!result || result.status === "passed") {
+      return;
+    }
+    setShouldShowExplain(false);
+    setIsExplanationVisible(true);
+    handleExplainFailure();
+  }, [handleExplainFailure, result]);
+
+  useEffect(() => {
+    if (!result) {
+      setShouldShowExplain(false);
+      return;
+    }
+
+    const currentResultId = `${result.exit_code}-${result.duration}`;
+
+    if (result.status !== "passed" && currentResultId !== lastResultId) {
+      setLastResultId(currentResultId);
+      setShouldShowExplain(true);
+    } else if (result.status === "passed" && currentResultId !== lastResultId) {
+      setLastResultId(currentResultId);
+      setShouldShowExplain(false);
+    }
+  }, [lastResultId, result]);
 
   const instructions = useMemo(() => {
     if (challengeError) {
@@ -293,6 +328,9 @@ function App() {
             isRunning={isRunning}
             challengeTitle={challenge?.title}
             testFilename={challenge?.test_filename}
+            onExplain={handleExplainButtonClick}
+            showExplainButton={shouldShowExplain}
+            isExplaining={isExplaining}
           />
           <TestResults
             result={result}
@@ -300,8 +338,8 @@ function App() {
             isRunning={isRunning}
             explanation={explanation}
             explainError={explainError}
-            isExplaining={isExplaining}
-            onExplain={handleExplainFailure}
+            isExplanationVisible={isExplanationVisible}
+            onExplanationClose={() => setIsExplanationVisible(false)}
           />
         </div>
       </div>
